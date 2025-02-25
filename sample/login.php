@@ -1,27 +1,33 @@
-
 <?php
+error_reporting(E_ALL);
 session_start();
-include 'connect.php';
+require_once('path.inc');
+require_once('get_host_info.inc');
+require_once('rabbitMQLib.inc');
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+  $client = new rabbitMQClient("testRabbitMQ.ini", "testServer");
     $username = $_POST["username"];
     $password = $_POST["password"];
-    $stmt = $conn->prepare("SELECT password FROM users WHERE username=?");
-    $stmt->bind_param("s", $username);
-    $stmt->execute();
-    $stmt->store_result();
+
+    // RabbitMQ client
+    //$client = new rabbitMQClient("testRabbitMQ.ini", "testServer");
+
+    // Request array
+    $request = array();
+    $request['type'] = "login";
+    $request['username'] = $username;
+    $request['password'] = $password;
+
     
-    if ($stmt->num_rows > 0) {
-        $stmt->bind_result($hashed_password);
-        $stmt->fetch();
-        
-        if (password_verify($password, $hashed_password)) {
-            $_SESSION["username"] = $username;
-            echo "Login successful!";
-        } else {
-            echo "Invalid credentials.";
-        }
+    $response = $client->send_request($request);
+
+    if ($response['success']) {
+        $_SESSION["username"] = $username;
+        header("Location: dashboard.php");
+        exit();
     } else {
-        echo "User not found.";
+        echo "Invalid credentials.";
     }
 }
 ?>

@@ -44,8 +44,9 @@ function doLogin($username, $password) {
 function doRegister($username, $password) {
     $conn = dbConnect();
     
-    $stmt = $conn->prepare("INSERT INTO users (username, password) VALUES (?, ?)");
-    $stmt->bind_param("ss", $username, $password);
+    $stmt = $conn->prepare("INSERT INTO users (username, password, email) VALUES (?, ?, ?)");
+    $stmt->bind_param("sss", $username, $password, $email);
+    
     
     if ($stmt->execute()) {
         return array("success" => true);
